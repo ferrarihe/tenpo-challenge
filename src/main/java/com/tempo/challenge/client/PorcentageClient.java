@@ -3,10 +3,8 @@ package com.tempo.challenge.client;
 import com.tempo.challenge.client.cache.CacheItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
@@ -57,7 +55,8 @@ public class PorcentageClient {
                         logger.warn("Servicio externo fallido, utilizando caché...");
                         return Mono.just(cacheItem.getPorcentage());
                     }
-                    return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "No se pudo obtener el porcentaje y no hay valor en cache"));
+                    logger.error("No se pudo obtener el porcentaje, devolviendo valor por defecto.");
+                    return Mono.just(PORCENTAGE_DEFAULT);
                 });
     }
 
