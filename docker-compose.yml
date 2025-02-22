@@ -1,0 +1,53 @@
+
+services:
+  # Servicio de la API con Spring WebFlux
+  api:
+    image: openjdk:21-jdk
+    container_name: challenge-api
+    command: ["java", "-jar", "/app/challenge-0.0.1-SNAPSHOT.jar"]  # Ejecuta tu archivo JAR
+    volumes:
+      - ./target:/app  # Monta el directorio ./target dentro del contenedor en /app
+    ports:
+      - "8080:8080"  # Expone el puerto 8080 del contenedor al puerto 8080 en tu máquina
+    environment:
+      - SPRING_R2DBC_URL=r2dbc:postgresql://db:5433/register
+      - SPRING_R2DBC_USERNAME=ferrarihe
+      - SPRING_R2DBC_PASSWORD=ilovetenpo.2025
+      - SPRING_REDIS_HOST=tenpo-challenge-redis-1
+      - SPRING_REDIS_PORT=6380
+    depends_on:
+      - db
+      - redis
+    networks:
+      - app-network
+
+  # Servicio de PostgreSQL
+  db:
+    image: postgres:13  # Puedes cambiar la versión si es necesario
+    environment:
+      - POSTGRES_DB=register
+      - POSTGRES_USER=ferrarihe
+      - POSTGRES_PASSWORD=ilovetenpo.2025
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"  # Exponer el puerto 5432 para conexiones
+    networks:
+      - app-network
+
+  # Servicio de Redis
+  redis:
+    image: redis:alpine
+    ports:
+      - "6380:6379"
+    networks:
+      - app-network
+
+# Definición de volúmenes persistentes
+volumes:
+  postgres_data:
+
+# Definición de redes
+networks:
+  app-network:
+    driver: bridge
