@@ -30,7 +30,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RateLimitExceededException.class)
     public ResponseEntity<Map<String, String>> handleRateLimitExceeded(RateLimitExceededException ex) {
-        String errorMessage = ex.getMessage(); // Obtén el mensaje de la excepción (ej. "Demasiados intentos, por favor espere X segundos. Intentos realizados: Y")
+        String errorMessage = ex.getMessage();
         return buildErrorResponse("Too Many Requests", errorMessage, HttpStatus.TOO_MANY_REQUESTS);
     }
 
@@ -130,10 +130,4 @@ public class GlobalExceptionHandler {
         return buildErrorResponse("Error en Redis", ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-
-
-
-
-
 }
-

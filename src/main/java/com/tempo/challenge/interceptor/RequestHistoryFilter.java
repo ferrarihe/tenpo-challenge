@@ -2,26 +2,23 @@ package com.tempo.challenge.interceptor;
 
 import com.tempo.challenge.entities.RequestHistory;
 import com.tempo.challenge.repository.RequestHistoryRepository;
-import org.reactivestreams.Publisher;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.http.server.reactive.ServerHttpResponse;
-import org.springframework.http.server.reactive.ServerHttpResponseDecorator;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.stream.Collectors;
+import java.util.List;
 
-// @Component implements WebFilter
-public class RequestHistoryFilter  {
+
+@Component
+public class RequestHistoryFilter implements WebFilter {
 
     private final RequestHistoryRepository requestHistoryRepository;
 
@@ -29,51 +26,53 @@ public class RequestHistoryFilter  {
         this.requestHistoryRepository = requestHistoryRepository;
     }
 
-    // @Override
+    @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         String requestUri = request.getURI().toString();
 
-        // Capturar Request Body sin bloquear
-        return DataBufferUtils.join(request.getBody())
-                .flatMap(requestBuffer -> {
-                    String requestBody = extractBody(requestBuffer);
+        // Solo procesar el cuerpo de la solicitud sin bloquear el flujo
+        return chain.filter(exchange)
+                .doOnTerminate(() -> {
+                    // Recoger el cuerpo de la solicitud y registrarlo en el historial
+                    exchange.getRequest().getBody()
+                            .collectList()  // Recoger el cuerpo en una lista de DataBuffers
+                            .flatMap(requestBuffers -> {
+                                String requestBody = extractBody(requestBuffers);
 
-                    // Decorar la respuesta para capturar el response body
-                    ServerHttpResponse originalResponse = exchange.getResponse();
-                    ServerHttpResponseDecorator decoratedResponse = new ServerHttpResponseDecorator(originalResponse) {
-                        @Override
-                        public Mono<Void> writeWith(Publisher<? extends DataBuffer> body) {
-                            if (body instanceof Flux) {
-                                Flux<? extends DataBuffer> fluxBody = (Flux<? extends DataBuffer>) body;
-                                return super.writeWith(fluxBody.doOnNext(dataBuffer -> {
-                                    String responseBody = extractBody(dataBuffer);
-                                    HttpStatusCode responseStatus = getStatusCode();
+                                // Crear el historial de la solicitud
+                                RequestHistory history = RequestHistory.builder()
+                                        .timestamp(Instant.now())
+                                        .endpoint(requestUri)
+                                        .parameters(requestBody)
+                                        .response("No se registró el cuerpo de la respuesta") // Mensaje indicativo
+                                        .build();
 
-                                    // Guardar la solicitud y respuesta en base de datos de forma asíncrona
-                                    RequestHistory history = RequestHistory.builder()
-                                            .timestamp(Instant.now())
-                                            .endpoint(requestUri)
-                                            .parameters(requestBody)
-                                            .response(responseBody)
-                                            .error(responseStatus != null && responseStatus.isError() ? responseBody : null)
-                                            .build();
+                                // Log para verificar la creación del historial
+                                System.out.println("Historial creado: " + history);
 
-                                    requestHistoryRepository.save(history).subscribe();
-                                }));
-                            }
-                            return super.writeWith(body);
-                        }
-                    };
-
-                    return chain.filter(exchange.mutate().response(decoratedResponse).build());
+                                // Guardar el historial de manera asíncrona sin bloquear
+                                return requestHistoryRepository.save(history)
+                                        .doOnSuccess(savedHistory -> {
+                                            // Log cuando el historial se guarda correctamente
+                                            System.out.println("Historial guardado: " + savedHistory);
+                                        })
+                                        .doOnError(error -> {
+                                            // Log cuando ocurre un error al guardar
+                                            System.err.println("Error al guardar historial: " + error.getMessage());
+                                        });
+                            }).subscribe();  // Ejecutar el registro sin bloquear el flujo principal
                 });
     }
 
-    private static String extractBody(DataBuffer buffer) {
-        byte[] bytes = new byte[buffer.readableByteCount()];
-        buffer.read(bytes);
-        DataBufferUtils.release(buffer);
-        return new String(bytes, StandardCharsets.UTF_8);
+    private static String extractBody(List<DataBuffer> buffers) {
+        StringBuilder body = new StringBuilder();
+        buffers.forEach(buffer -> {
+            byte[] bytes = new byte[buffer.readableByteCount()];
+            buffer.read(bytes);
+            DataBufferUtils.release(buffer);
+            body.append(new String(bytes, StandardCharsets.UTF_8));
+        });
+        return body.toString();
     }
 }

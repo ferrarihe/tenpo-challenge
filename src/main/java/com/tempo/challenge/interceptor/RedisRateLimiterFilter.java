@@ -27,7 +27,7 @@ public class RedisRateLimiterFilter implements WebFilter {
 
         // Excluir rutas de Swagger y OpenAPI
         if (path.contains("/swagger-ui/") || path.contains("/v3/api-docs") || path.contains("/webjars/")) {
-            return chain.filter(exchange); // No aplicar rate limiting en rutas de Swagger
+            return chain.filter(exchange);
         }
 
         String ip = exchange.getRequest().getRemoteAddress().getAddress().getHostAddress();
@@ -40,18 +40,15 @@ public class RedisRateLimiterFilter implements WebFilter {
                         redisTemplate.expire(key, WINDOW).subscribe();
                     }
 
-                    // Obtener el tiempo restante de expiración en Duration
+                    // Obtener el tiempo restante de expiración
                     return redisTemplate.getExpire(key)
                             .flatMap(expireTime -> {
                                 if (expireTime == null) {
-                                    expireTime = Duration.ZERO; // Asegurarnos de no obtener un valor nulo
+                                    expireTime = Duration.ZERO;
                                 }
-
-                                // Si `expireTime` es de tipo Duration, no necesitamos convertirlo
                                 long remainingTimeInSeconds = expireTime.getSeconds();
 
                                 if (count > LIMIT) {
-                                    // Lanzar la excepción personalizada con el mensaje detallado
                                     String message = String.format(
                                             "Demasiados intentos, por favor espere %d segundos. Intentos realizados: %d",
                                             remainingTimeInSeconds, count);
