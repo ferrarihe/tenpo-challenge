@@ -8,7 +8,6 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 import java.time.Duration;
-import java.time.Instant;
 
 @Component
 public class RedisRateLimiterFilter implements WebFilter {
@@ -23,10 +22,7 @@ public class RedisRateLimiterFilter implements WebFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        String path = exchange.getRequest().getPath().toString();
-
-        // Excluir rutas de Swagger y OpenAPI
-        if (path.contains("/swagger-ui/") || path.contains("/v3/api-docs") || path.contains("/webjars/")) {
+        if (FilterUtils.isSwaggerPath(exchange)) {
             return chain.filter(exchange);
         }
 
