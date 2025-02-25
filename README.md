@@ -60,5 +60,49 @@ Este proyecto implementa una API REST en **Spring Boot con WebFlux** utilizando 
 - **Spring Data Redis Reactive**: para almacenar y gestionar los valores en caché de forma reactiva.
 - **Springdoc OpenAPI**: para generar la documentación de la API con Swagger.
 
-### Docker y Docker Compose
-El proyecto está configurado para ejecutarse tanto la API como la base de datos PostgreSQL en contenedores Docker. Utiliza el siguiente archivo `docker-compose.yml`:
+## Como desplegar la API Localmente 
+
+### 1. clone del repositorio github
+
+### 2. Buildear el proyecto (mvn clean install) para crear el target/challenge-0.0.1-SNAPSHOT.jar
+
+### 3. Contruir los docker (docker-compose up --build -d) 
+
+### 4. Validar los 3 dockers (challenge-api / enpo-challenge-db-1 / tenpo-challenge-redis-1) y que esten en la misma red app-network (docker network inspect app-network)
+
+### 5. Acceder a Swagger (Open API) para hacer uso de los EP. URL: http://localhost:8080/ms-domain-calculator/v1/swagger-ui.html
+
+### 6. Consultar request_history mediante pgAdmin:
+
+SELECT id, "timestamp", endpoint, parameters, response, error
+	FROM public.request_history;
+
+  En caso de no haberse creado la tabla (Problem de permisos o conectividad u otros), por favor correr el siguiente script:
+
+-- Table: public.request_history
+
+-- DROP TABLE IF EXISTS public.request_history;
+
+CREATE TABLE IF NOT EXISTS public.request_history
+(
+    id integer NOT NULL DEFAULT nextval('request_history_id_seq'::regclass),
+    "timestamp" timestamp without time zone NOT NULL,
+    endpoint character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    parameters text COLLATE pg_catalog."default",
+    response text COLLATE pg_catalog."default",
+    error text COLLATE pg_catalog."default",
+    CONSTRAINT request_history_pkey PRIMARY KEY (id)
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.request_history
+    OWNER to ferrarihe;
+
+
+USANDO LAS SIGUEINTE CREDENCIALES:
+-- HOST: localhost
+-- PORT: 5433
+-- DB=register
+-- USER=ferrarihe
+-- PASSWORD=ilovetenpo.2025

@@ -4,11 +4,11 @@ services:
   api:
     image: openjdk:21-jdk
     container_name: challenge-api
-    command: ["java", "-jar", "/app/challenge-0.0.1-SNAPSHOT.jar"]  # Ejecuta tu archivo JAR
+    command: ["java", "-jar", "/app/challenge-0.0.1-SNAPSHOT.jar"]
     volumes:
-      - ./target:/app  # Monta el directorio ./target dentro del contenedor en /app
+      - ./target:/app
     ports:
-      - "8080:8080"  # Expone el puerto 8080 del contenedor al puerto 8080 en tu máquina
+      - "8080:8080"
     environment:
       - SPRING_R2DBC_URL=r2dbc:postgresql://db:5433/register
       - SPRING_R2DBC_USERNAME=ferrarihe
@@ -23,7 +23,7 @@ services:
 
   # Servicio de PostgreSQL
   db:
-    image: postgres:13  # Puedes cambiar la versión si es necesario
+    image: postgres:13
     environment:
       - POSTGRES_DB=register
       - POSTGRES_USER=ferrarihe
@@ -31,7 +31,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5433:5432"  # Exponer el puerto 5432 para conexiones
+      - "5433:5432"
     networks:
       - app-network
 
