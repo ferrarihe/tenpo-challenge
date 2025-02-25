@@ -24,6 +24,13 @@ public class RequestHistoryController {
         this.requestHistoryService = requestHistoryService;
     }
 
+    /**
+     * Obtiene el historial de peticiones registradas en la API.
+     *
+     * @param page Número de página solicitada.
+     * @param size Cantidad de elementos por página (mínimo 1).
+     * @return Mono con una página de registros de historial de peticiones.
+     */
     @GetMapping
     @Operation(summary = "Devuelve Historial de peticiones", description = "Servicio que devuelve Historial de Peticiones recibidas en la API.")
     public Mono<Page<RequestHistoryResponse>> getCallHistory(@RequestParam int page, @RequestParam int size) {

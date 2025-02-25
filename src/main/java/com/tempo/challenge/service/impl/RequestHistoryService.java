@@ -18,6 +18,12 @@ public class RequestHistoryService implements IRequestHistoryService {
         this.requestHistoryRepository = requestHistoryRepository;
     }
 
+    /**
+     * Recupera el historial de peticiones de la API de manera paginada.
+     *
+     * @param pageable Información de paginación con el número de página y tamaño.
+     * @return Mono con una página de respuestas de historial de peticiones.
+     */
     @Override
     public Mono<Page<RequestHistoryResponse>> getRequestHistory(Pageable pageable) {
         int offset = pageable.getPageNumber() * pageable.getPageSize();
@@ -35,6 +41,5 @@ public class RequestHistoryService implements IRequestHistoryService {
                 .zipWith(requestHistoryRepository.count())
                 .map(tuple -> new PageImpl<>(tuple.getT1(), pageable, tuple.getT2()));
     }
-
 
 }

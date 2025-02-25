@@ -14,6 +14,13 @@ public class CalculatorService implements ICalculatorService {
         this.porcentajeClient = porcentajeClient;
     }
 
+    /**
+     * Suma dos números y aplica un porcentaje adicional obtenido de un servicio externo.
+     *
+     * @param first  Primer número a sumar.
+     * @param second Segundo número a sumar.
+     * @return Mono con el resultado de la suma aplicando el porcentaje.
+     */
     @Override
     public Mono<Double> sumWithPercentage(Double first, Double second) {
         double sum = first + second;

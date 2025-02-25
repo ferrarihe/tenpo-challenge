@@ -20,6 +20,12 @@ public class CalculatorController {
     }
 
 
+    /**
+     * Realiza la suma de dos números y aplica un porcentaje adicional obtenido de un servicio externo.
+     *
+     * @param request Objeto que contiene los dos números a sumar.
+     * @return Mono con la respuesta HTTP que contiene el resultado de la operación o una respuesta de error.
+     */
     @PostMapping("/calculate")
     @Operation(summary = "Suma con porcentaje", description = "Servicio que suma dos números y aplica un porcentaje adicional\n" +
             "obtenido de un servicio externo")

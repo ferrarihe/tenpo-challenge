@@ -20,6 +20,14 @@ public class RedisRateLimiterFilter implements WebFilter {
         this.redisTemplate = redisTemplate;
     }
 
+    /**
+     * Filtro que implementa un limitador de tasa basado en Redis para restringir
+     * el número de solicitudes permitidas desde una misma IP en un tiempo determinado.
+     *
+     * @param exchange Intercambio de la solicitud y respuesta del servidor.
+     * @param chain    Cadena de filtros a aplicar.
+     * @return Mono que representa la ejecución del filtro.
+     */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         if (FilterUtils.isSwaggerPath(exchange)) {

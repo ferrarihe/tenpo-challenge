@@ -23,6 +23,14 @@ public class RequestHistoryFilter implements WebFilter {
         this.requestHistoryRepository = requestHistoryRepository;
     }
 
+    /**
+     * Filtro que intercepta todas las solicitudes HTTP para registrar su historial,
+     * excluyendo las rutas de Swagger.
+     *
+     * @param exchange Intercambio de la solicitud y respuesta del servidor.
+     * @param chain    Cadena de filtros a aplicar.
+     * @return Mono que representa la ejecución del filtro.
+     */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         if (FilterUtils.isSwaggerPath(exchange)) {
@@ -47,6 +55,14 @@ public class RequestHistoryFilter implements WebFilter {
                 });
     }
 
+    /**
+     * Metodo private que persiste un registro en el historial de solicitudes.
+     *
+     * @param exchange  Intercambio de la solicitud y respuesta.
+     * @param endpoint  URL del endpoint accedido.
+     * @param parameters Parámetros de la solicitud.
+     * @param error     Mensaje de error en caso de fallo (puede ser null).
+     */
     private void saveRequestHistory(ServerWebExchange exchange, String endpoint, String parameters, String error) {
         RequestHistory record = RequestHistory.builder()
                 .timestamp(Instant.now())
